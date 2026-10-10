@@ -1,7 +1,11 @@
 import { ApiError } from '../utils/ApiError.js';
 
-export const validate = (schema) => (req, res, next) => {
-  const result = schema.safeParse(req.body);
+/**
+ * validate(schema)           → validates req.body  (cleaned result replaces req.body)
+ * validate(schema, 'query')  → validates req.query (cleaned result in req.validated.query)
+ */
+export const validate = (schema, source = 'body') => (req, res, next) => {
+  const result = schema.safeParse(req[source]);
 
   if (!result.success) {
     const details = result.error.issues.map((issue) => ({
@@ -11,6 +15,8 @@ export const validate = (schema) => (req, res, next) => {
     return next(new ApiError(400, 'Validation failed', details));
   }
 
-  req.body = result.data; // cleaned data (trimmed, lowercased, unknown keys removed)
+  req.validated = { ...req.validated, [source]: result.data };
+  if (source === 'body') req.body = result.data;
+
   next();
 };
