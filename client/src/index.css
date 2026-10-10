@@ -1,0 +1,79 @@
+@import "tailwindcss";
+
+/* Lets `dark:` follow the .dark class on <html> instead of the OS setting */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* Light theme values */
+:root {
+  --app: #f6f7fb;
+  --surface: #ffffff;
+  --surface-2: #f0f2f8;
+  --line: #e4e7f0;
+  --fg: #12141f;
+  --fg-muted: #565d73;
+  --fg-subtle: #8a91a6;
+  color-scheme: light;
+}
+
+/* Dark theme: same names, different values */
+.dark {
+  --app: #0b0d14;
+  --surface: #131622;
+  --surface-2: #1a1e2e;
+  --line: #262b3e;
+  --fg: #eceef6;
+  --fg-muted: #a3aac0;
+  --fg-subtle: #747b92;
+  color-scheme: dark;
+}
+
+/* Static tokens: the brand palette and font */
+@theme {
+  --font-sans: "Inter Variable", ui-sans-serif, system-ui, sans-serif;
+
+  --color-brand-50: #f1f0ff;
+  --color-brand-100: #e6e4ff;
+  --color-brand-200: #cfcbff;
+  --color-brand-300: #b0a8ff;
+  --color-brand-400: #8f82fc;
+  --color-brand-500: #7360f6;
+  --color-brand-600: #6142ea;
+  --color-brand-700: #5232cf;
+  --color-brand-800: #442aa8;
+  --color-brand-900: #382883;
+}
+
+/* Theme-aware tokens: `inline` makes utilities read the live variable, so
+   bg-surface automatically changes when .dark swaps --surface */
+@theme inline {
+  --color-app: var(--app);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-line: var(--line);
+  --color-fg: var(--fg);
+  --color-fg-muted: var(--fg-muted);
+  --color-fg-subtle: var(--fg-subtle);
+}
+
+@layer base {
+  /* Tailwind v4 borders default to currentColor; make them our line color */
+  *,
+  ::after,
+  ::before {
+    border-color: var(--color-line);
+  }
+
+  html {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  body {
+    @apply bg-app text-fg antialiased;
+    min-height: 100dvh;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-brand-500);
+    outline-offset: 2px;
+  }
+}
