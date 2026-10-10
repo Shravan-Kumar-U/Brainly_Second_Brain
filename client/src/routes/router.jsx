@@ -10,6 +10,7 @@ import ProtectedRoute from './ProtectedRoute';
 import PublicRoute from './PublicRoute';
 import AddItemPage from '@/pages/AddItemPage';
 import LibraryPage from '@/pages/LibraryPage';
+import InsightsPage from '@/pages/InsightsPage';
 
 export const router = createBrowserRouter([
   {
@@ -34,6 +35,7 @@ export const router = createBrowserRouter([
         children: [
           { path: '/', element: <HomePage /> },
           { path: '/library', element: <LibraryPage /> },
+          { path: '/insights', element: <InsightsPage /> },
           { path: '/add', element: <AddItemPage /> },
         ],
       },
