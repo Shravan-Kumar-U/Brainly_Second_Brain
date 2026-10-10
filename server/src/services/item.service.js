@@ -59,7 +59,11 @@ export const listItems = async (userId, query) => {
   const filter = { user: userId };
 
   // No status given = everything except archived
-  filter.status = status ?? { $ne: ITEM_STATUS.ARCHIVED };
+  if (status === 'active') {
+    filter.status = { $in: [ITEM_STATUS.INBOX, ITEM_STATUS.SCHEDULED] };
+  } else {
+    filter.status = status ?? { $ne: ITEM_STATUS.ARCHIVED };
+  }
   if (platform) filter.platform = platform;
   if (contentType) filter.contentType = contentType;
   if (tag) filter.tags = tag;
@@ -101,9 +105,10 @@ export const updateItem = async (userId, id, changes) => {
 
   Object.assign(item, fields);
 
-  if (scheduledAt !== undefined) {
+    if (scheduledAt !== undefined) {
     item.scheduledAt = scheduledAt;
-    item.notifiedAt = null; // allow the scheduler to notify again
+    item.snoozeCount = 0; // a deliberate new time means "yes, I still want this"
+    item.notifiedAt = null;
     item.completedAt = null;
     item.status = scheduledAt ? ITEM_STATUS.SCHEDULED : ITEM_STATUS.INBOX;
   }

@@ -60,7 +60,7 @@ export const snoozeSchema = z.object({
 });
 
 export const listItemsQuerySchema = z.object({
-  status: z.enum(ITEM_STATUSES).optional(),
+  status: z.enum([...ITEM_STATUSES, 'active']).optional(),
   platform: z.enum(PLATFORMS).optional(),
   contentType: contentType.optional(),
   tag: z.string().trim().toLowerCase().optional(),
