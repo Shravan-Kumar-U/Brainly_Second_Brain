@@ -36,7 +36,6 @@ const BLOCKED_RANGES = [
   // IPv6
   ['::', 128, 'ipv6'], // unspecified
   ['::1', 128, 'ipv6'], // loopback
-  ['64:ff9b::', 96, 'ipv6'], // NAT64
   ['2001::', 32, 'ipv6'], // Teredo
   ['2002::', 16, 'ipv6'], // 6to4
   ['fc00::', 7, 'ipv6'], // unique local (also Railway private network)
@@ -49,22 +48,46 @@ for (const [address, prefix, family] of BLOCKED_RANGES) {
   blockList.addSubnet(address, prefix, family);
 }
 
-const MAPPED_V4_DOTTED = /^::ffff:(\d{1,3}(?:\.\d{1,3}){3})$/i;
-const MAPPED_V4_HEX = /^::ffff:([0-9a-f]{1,4}):([0-9a-f]{1,4})$/i;
 
-// "::ffff:7f00:1" or "::ffff:127.0.0.1" → "127.0.0.1" (null if not a mapped address)
-const unmapIPv4 = (address) => {
-  const dotted = MAPPED_V4_DOTTED.exec(address);
-  if (dotted) return dotted[1];
 
-  const hex = MAPPED_V4_HEX.exec(address);
-  if (hex) {
-    const high = parseInt(hex[1], 16);
-    const low = parseInt(hex[2], 16);
-    return `${high >> 8}.${high & 255}.${low >> 8}.${low & 255}`;
+// Any IPv6 spelling ("::", compressed, dotted tail) → 16 bytes
+const ipv6ToBytes = (address) => {
+  let text = address.toLowerCase();
+
+  const dotted = /(\d{1,3}(?:\.\d{1,3}){3})$/.exec(text);
+  if (dotted) {
+    const [a, b, c, d] = dotted[1].split('.').map(Number);
+    text =
+      text.slice(0, -dotted[1].length) +
+      ((a << 8) | b).toString(16) +
+      ':' +
+      ((c << 8) | d).toString(16);
   }
 
-  return null;
+  const [head, rest] = text.split('::');
+  const first = head ? head.split(':') : [];
+  const last = rest ? rest.split(':') : [];
+  const fill = rest === undefined ? [] : Array(8 - first.length - last.length).fill('0');
+
+  const bytes = [];
+  for (const group of [...first, ...fill, ...last]) {
+    const value = parseInt(group, 16);
+    bytes.push(value >> 8, value & 255);
+  }
+  return bytes;
+};
+
+// IPv4 hidden inside an IPv6 address, or null.
+//   ::ffff:a.b.c.d    → IPv4-mapped
+//   64:ff9b::a.b.c.d  → NAT64 (the real IPv4 is the last 32 bits)
+const embeddedIPv4 = (address) => {
+  const b = ipv6ToBytes(address);
+  const zeros = (from, to) => b.slice(from, to).every((x) => x === 0);
+
+  const isMapped = zeros(0, 10) && b[10] === 0xff && b[11] === 0xff;
+  const isNat64 = b[0] === 0 && b[1] === 0x64 && b[2] === 0xff && b[3] === 0x9b && zeros(4, 12);
+
+  return isMapped || isNat64 ? b.slice(12).join('.') : null;
 };
 
 export const isPublicIp = (rawAddress) => {
@@ -72,9 +95,11 @@ export const isPublicIp = (rawAddress) => {
   const family = net.isIP(address);
   if (family === 0) return false;
 
-  // An IPv6 address wrapping an IPv4 one must be judged by the IPv4 inside
+  // An IPv6 address that wraps an IPv4 one is judged by the IPv4 inside.
+  // This keeps 64:ff9b::7f00:1 (= 127.0.0.1) blocked while allowing
+  // 64:ff9b::14cf:4952 (= 20.207.73.82, a public address).
   if (family === 6) {
-    const embedded = unmapIPv4(address);
+    const embedded = embeddedIPv4(address);
     if (embedded) return isPublicIp(embedded);
   }
 
@@ -108,7 +133,11 @@ export const safeLookup = (hostname, options, callback) => {
   dns.lookup(hostname, { ...options, all: true }, (error, addresses) => {
     if (error) return callback(error);
 
-    if (addresses.length === 0 || addresses.some(({ address }) => !isPublicIp(address))) {
+        const blocked = addresses.filter(({ address }) => !isPublicIp(address));
+    if (addresses.length === 0 || blocked.length > 0) {
+      console.warn(
+        `[ssrf] blocked ${hostname} -> ${blocked.map((a) => a.address).join(', ') || 'no addresses'}`
+      );
       return callback(new UnsafeUrlError('Host resolves to a private address'));
     }
 
