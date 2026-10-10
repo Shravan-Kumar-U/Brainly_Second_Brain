@@ -1,33 +1,44 @@
 import { LogOut } from 'lucide-react';
 import { Outlet } from 'react-router';
 
-import { Button } from '@/components/ui/Button';
 import { Logo } from '@/components/ui/Logo';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
 import { useAuth } from '@/hooks/useAuth';
+import { BottomNav } from './BottomNav';
+import { Sidebar } from './Sidebar';
 
 export default function AppShell() {
   const { logout } = useAuth();
 
   return (
     <div className="min-h-dvh">
-      <header className="sticky top-0 z-30 border-b bg-surface/80 backdrop-blur-lg">
-        <div className="mx-auto flex h-16 max-w-3xl items-center justify-between px-4">
-          <Logo />
-          <div className="flex items-center gap-1">
-            <ThemeToggle />
-            <Button variant="ghost" size="sm" onClick={logout}>
-              <LogOut className="size-4" aria-hidden />
-              <span className="hidden sm:inline">Log out</span>
-              <span className="sr-only sm:hidden">Log out</span>
-            </Button>
-          </div>
-        </div>
-      </header>
+      <Sidebar />
 
-      <main className="mx-auto max-w-3xl px-4 py-6 pb-24">
-        <Outlet />
-      </main>
+      <div className="lg:pl-64">
+        {/* Phone-only top bar. On laptops the sidebar replaces it. */}
+        <header className="sticky top-0 z-30 border-b bg-surface/80 backdrop-blur-lg lg:hidden">
+          <div className="flex h-14 items-center justify-between px-4">
+            <Logo />
+            <div className="flex items-center gap-1">
+              <ThemeToggle />
+              <button
+                type="button"
+                onClick={logout}
+                aria-label="Log out"
+                className="grid size-10 place-items-center rounded-xl text-fg-muted transition hover:bg-surface-2 hover:text-fg"
+              >
+                <LogOut className="size-5" aria-hidden />
+              </button>
+            </div>
+          </div>
+        </header>
+
+        <main className="mx-auto w-full max-w-[1800px] px-4 py-6 pb-28 sm:px-6 lg:px-10 lg:py-10 lg:pb-12">
+          <Outlet />
+        </main>
+      </div>
+
+      <BottomNav />
     </div>
   );
 }

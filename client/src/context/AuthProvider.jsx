@@ -4,6 +4,7 @@ import { authApi } from '@/api/auth.api';
 import { AUTH_EXPIRED_EVENT } from '@/api/client';
 import { tokenStorage } from '@/lib/tokenStorage';
 import { AuthContext } from './auth-context';
+import { queryClient } from '@/lib/queryClient';
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
@@ -34,6 +35,7 @@ export function AuthProvider({ children }) {
   // The API layer announces when the session is truly dead (refresh rejected)
   useEffect(() => {
     const onExpired = () => {
+      queryClient.clear();
       setUser(null);
       setStatus('unauthenticated');
     };
@@ -44,6 +46,7 @@ export function AuthProvider({ children }) {
   const login = useCallback(async (credentials) => {
     const data = await authApi.login(credentials);
     tokenStorage.set(data);
+    queryClient.clear();
     setUser(data.user);
     setStatus('authenticated');
   }, []);
@@ -52,6 +55,7 @@ export function AuthProvider({ children }) {
     const data = await authApi.register(payload);
     tokenStorage.set(data);
     setUser(data.user);
+    queryClient.clear();
     setStatus('authenticated');
   }, []);
 
@@ -60,6 +64,7 @@ export function AuthProvider({ children }) {
 
     // Sign out locally first so the UI responds instantly
     tokenStorage.clear();
+    queryClient.clear();
     setUser(null);
     setStatus('unauthenticated');
 

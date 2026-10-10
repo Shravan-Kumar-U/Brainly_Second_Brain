@@ -8,6 +8,8 @@ import NotFoundPage from '@/pages/NotFoundPage';
 import RegisterPage from '@/pages/RegisterPage';
 import ProtectedRoute from './ProtectedRoute';
 import PublicRoute from './PublicRoute';
+import AddItemPage from '@/pages/AddItemPage';
+import LibraryPage from '@/pages/LibraryPage';
 
 export const router = createBrowserRouter([
   {
@@ -29,7 +31,11 @@ export const router = createBrowserRouter([
     children: [
       {
         element: <AppShell />,
-        children: [{ path: '/', element: <HomePage /> }],
+        children: [
+          { path: '/', element: <HomePage /> },
+          { path: '/library', element: <LibraryPage /> },
+          { path: '/add', element: <AddItemPage /> },
+        ],
       },
     ],
   },

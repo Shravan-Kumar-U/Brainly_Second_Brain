@@ -41,6 +41,18 @@
   --color-brand-700: #5232cf;
   --color-brand-800: #442aa8;
   --color-brand-900: #382883;
+  --animate-fade-in: fade-in 0.15s ease-out;
+  --animate-sheet-in: sheet-in 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+
+  @keyframes fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  @keyframes sheet-in {
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: none; }
+  }
 }
 
 /* Theme-aware tokens: `inline` makes utilities read the live variable, so
@@ -75,5 +87,13 @@
   :focus-visible {
     outline: 2px solid var(--color-brand-500);
     outline-offset: 2px;
+  }
+}
+
+/* Hides scrollbars on horizontally scrolling chip rows */
+@utility no-scrollbar {
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
   }
 }
