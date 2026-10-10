@@ -3,6 +3,8 @@ import {
   CONTENT_TYPES,
   ITEM_STATUS,
   ITEM_STATUSES,
+  METADATA_STATUS,
+  METADATA_STATUSES,
   PLATFORMS,
   SNOOZE_REVIEW_THRESHOLD,
 } from '../constants/item.constants.js';
@@ -21,6 +23,14 @@ const itemSchema = new mongoose.Schema(
     description: { type: String, trim: true, maxlength: 1000, default: '' },
     thumbnail: { type: String, default: null },
     durationMinutes: { type: Number, min: 1, max: 600, default: null },
+
+    author: { type: String, trim: true, maxlength: 120, default: '' },
+    metadataStatus: {
+      type: String,
+      enum: METADATA_STATUSES,
+      default: METADATA_STATUS.PENDING,
+    },
+    metadataFetchedAt: { type: Date, default: null },
 
     notes: { type: String, trim: true, maxlength: 2000, default: '' },
     tags: { type: [String], default: [] },

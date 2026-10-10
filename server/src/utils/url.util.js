@@ -70,3 +70,23 @@ export const normalizeUrl = (rawUrl) => {
 
   return `${host}${pathname}${query ? `?${query}` : ''}`;
 };
+
+
+const YOUTUBE_ID = /^[\w-]{11}$/;
+
+// Handles watch?v=, youtu.be/, /shorts/, /embed/ and /live/ links
+export const extractYouTubeId = (rawUrl) => {
+  const url = new URL(rawUrl);
+  const host = url.hostname.toLowerCase().replace(/^(www|m|music)\./, '');
+  let id = null;
+
+  if (host === 'youtu.be') {
+    id = url.pathname.split('/')[1];
+  } else if (host === 'youtube.com') {
+    const [, kind, value] = url.pathname.split('/');
+    if (kind === 'watch') id = url.searchParams.get('v');
+    else if (['shorts', 'embed', 'live'].includes(kind)) id = value;
+  }
+
+  return id && YOUTUBE_ID.test(id) ? id : null;
+};

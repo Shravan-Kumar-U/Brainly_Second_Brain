@@ -20,6 +20,7 @@ export const env = Object.freeze({
   port: Number(process.env.PORT) || 5000,
   mongoUri: process.env.MONGODB_URI,
   clientUrl: process.env.CLIENT_URL || 'http://localhost:5173',
+  youtubeApiKey: process.env.YOUTUBE_API_KEY || null,
   jwt: Object.freeze({
     accessSecret: process.env.JWT_ACCESS_SECRET,
     accessExpiresIn: process.env.JWT_ACCESS_EXPIRES_IN || '15m',

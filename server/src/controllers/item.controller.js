@@ -50,3 +50,13 @@ export const listTags = asyncHandler(async (req, res) => {
   const tags = await itemService.getTagCounts(req.user._id);
   res.json({ success: true, data: { tags } });
 });
+
+export const previewLink = asyncHandler(async (req, res) => {
+  const preview = await itemService.previewLink(req.body.url);
+  res.json({ success: true, data: { preview } });
+});
+
+export const refreshMetadata = asyncHandler(async (req, res) => {
+  const item = await itemService.refreshMetadata(req.user._id, req.params.id);
+  res.json({ success: true, data: { item } });
+});

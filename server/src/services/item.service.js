@@ -2,6 +2,9 @@ import { ITEM_STATUS } from '../constants/item.constants.js';
 import { Item } from '../models/Item.js';
 import { ApiError } from '../utils/ApiError.js';
 import { detectPlatform, normalizeUrl } from '../utils/url.util.js';
+import { isUnsafeUrlError } from '../utils/ssrf.util.js';
+import { enrichInBackground, enrichItem } from './itemEnrichment.service.js';
+import { fetchMetadata } from './metadata/index.js';
 
 const MINUTE_MS = 60 * 1000;
 
@@ -30,7 +33,7 @@ export const createItem = async (userId, data) => {
 
   const detected = detectPlatform(data.url);
 
-  return Item.create({
+  const item = await Item.create({
     user: userId,
     url: data.url,
     normalizedUrl,
@@ -43,6 +46,11 @@ export const createItem = async (userId, data) => {
     scheduledAt: data.scheduledAt ?? null,
     status: data.scheduledAt ? ITEM_STATUS.SCHEDULED : ITEM_STATUS.INBOX,
   });
+
+  // The user gets an instant response; metadata arrives a few seconds later
+  enrichInBackground(item._id);
+
+  return item;
 };
 
 export const listItems = async (userId, query) => {
@@ -160,3 +168,26 @@ export const getTagCounts = (userId) =>
     { $sort: { count: -1, _id: 1 } },
     { $project: { _id: 0, tag: '$_id', count: 1 } },
   ]);
+
+
+  // Retry for items whose metadata failed (or never ran). Fills empty fields only.
+export const refreshMetadata = async (userId, id) => {
+  const item = await findOwned(userId, id);
+  await enrichItem(item._id);
+  return Item.findById(item._id);
+};
+
+// Used by the "Add item" screen to show a preview before saving
+export const previewLink = async (url) => {
+  const { platform, contentType } = detectPlatform(url);
+
+  try {
+    const metadata = await fetchMetadata(url);
+    return { url, platform, contentType, metadata };
+  } catch (error) {
+    if (isUnsafeUrlError(error)) {
+      throw new ApiError(400, 'This link points to a private or unsupported address');
+    }
+    throw error;
+  }
+};
