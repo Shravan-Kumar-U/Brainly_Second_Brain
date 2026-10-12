@@ -109,6 +109,7 @@ export const updateItem = async (userId, id, changes) => {
     item.scheduledAt = scheduledAt;
     item.snoozeCount = 0; // a deliberate new time means "yes, I still want this"
     item.notifiedAt = null;
+    item.notifyAttempts = 0;
     item.completedAt = null;
     item.status = scheduledAt ? ITEM_STATUS.SCHEDULED : ITEM_STATUS.INBOX;
   }
@@ -119,6 +120,7 @@ export const updateItem = async (userId, id, changes) => {
 
 export const completeItem = async (userId, id) => {
   const item = await findOwned(userId, id);
+  if (item.status === ITEM_STATUS.COMPLETED) return item;
   item.status = ITEM_STATUS.COMPLETED;
   item.completedAt = new Date();
   await item.save();
@@ -135,6 +137,7 @@ export const snoozeItem = async (userId, id, minutes) => {
   item.scheduledAt = new Date(Date.now() + minutes * MINUTE_MS);
   item.status = ITEM_STATUS.SCHEDULED;
   item.notifiedAt = null;
+  item.notifyAttempts = 0;
   item.snoozeCount += 1;
 
   await item.save();
@@ -154,6 +157,7 @@ export const restoreItem = async (userId, id) => {
   item.status = ITEM_STATUS.INBOX;
   item.scheduledAt = null;
   item.notifiedAt = null;
+  item.notifyAttempts = 0;
   item.completedAt = null;
   item.snoozeCount = 0;
   await item.save();

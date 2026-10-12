@@ -9,8 +9,21 @@ export const PLATFORMS = [
   'tiktok',
   'medium',
   'other',
+  
 ];
 
+export const PLATFORM_LABELS = {
+  youtube: 'YouTube',
+  instagram: 'Instagram',
+  facebook: 'Facebook',
+  twitter: 'X',
+  github: 'GitHub',
+  linkedin: 'LinkedIn',
+  reddit: 'Reddit',
+  tiktok: 'TikTok',
+  medium: 'Medium',
+  other: 'Web',
+};
 export const CONTENT_TYPES = ['video', 'image', 'post', 'article', 'repo', 'other'];
 
 export const ITEM_STATUS = Object.freeze({

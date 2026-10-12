@@ -57,5 +57,19 @@ export const consumeRefreshToken = async (token) => {
 };
 
 export const revokeRefreshToken = async (token) => {
-  await RefreshToken.deleteOne({ tokenHash: hashToken(token) });
+  const record = await RefreshToken.findOneAndDelete({ tokenHash: hashToken(token) });
+  return record?.user ?? null;
 };
+
+const ACTION_AUDIENCE = 'item-action';
+
+// A short-lived pass for one item, used by the Done/Snooze buttons inside a notification.
+// Signed with a DIFFERENT secret than login tokens, so it can never be used to log in.
+export const signActionToken = ({ userId, itemId }) =>
+  jwt.sign({ sub: String(userId), item: String(itemId) }, env.jwt.refreshSecret, {
+    audience: ACTION_AUDIENCE,
+    expiresIn: '24h',
+  });
+
+export const verifyActionToken = (token) =>
+  jwt.verify(token, env.jwt.refreshSecret, { audience: ACTION_AUDIENCE });

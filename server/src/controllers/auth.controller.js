@@ -28,7 +28,7 @@ export const refresh = asyncHandler(async (req, res) => {
 });
 
 export const logout = asyncHandler(async (req, res) => {
-  await authService.logout(req.body.refreshToken);
+  await authService.logout(req.body.refreshToken, req.body.pushEndpoint);
 
   res.json({ success: true, message: 'Logged out' });
 });

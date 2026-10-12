@@ -5,6 +5,7 @@ import { AUTH_EXPIRED_EVENT } from '@/api/client';
 import { tokenStorage } from '@/lib/tokenStorage';
 import { AuthContext } from './auth-context';
 import { queryClient } from '@/lib/queryClient';
+import { pushClient } from '@/lib/pushClient';
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
@@ -59,8 +60,11 @@ export function AuthProvider({ children }) {
     setStatus('authenticated');
   }, []);
 
-  const logout = useCallback(async () => {
+    const logout = useCallback(async () => {
     const refreshToken = tokenStorage.getRefresh();
+    // A quick local lookup. The server removes this device so the next person
+    // using it doesn't receive your reminders.
+    const pushEndpoint = await pushClient.getEndpoint();
 
     // Sign out locally first so the UI responds instantly
     tokenStorage.clear();
@@ -70,7 +74,7 @@ export function AuthProvider({ children }) {
 
     if (refreshToken) {
       try {
-        await authApi.logout(refreshToken); // revoke it on the server too
+        await authApi.logout(refreshToken, pushEndpoint);
       } catch {
         /* best effort: the token expires on its own anyway */
       }

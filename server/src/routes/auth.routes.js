@@ -6,6 +6,7 @@ import { authLimiter } from '../middleware/rateLimiter.js';
 import { validate } from '../middleware/validate.js';
 import {
   loginSchema,
+  logoutSchema,
   refreshSchema,
   registerSchema,
 } from '../validators/auth.validator.js';
@@ -14,6 +15,7 @@ const router = Router();
 
 router.post('/register', authLimiter, validate(registerSchema), authController.register);
 router.post('/login', authLimiter, validate(loginSchema), authController.login);
+router.post('/logout', validate(logoutSchema), authController.logout);
 router.post('/refresh', authLimiter, validate(refreshSchema), authController.refresh);
 router.post('/logout', validate(refreshSchema), authController.logout);
 router.get('/me', protect, authController.me);

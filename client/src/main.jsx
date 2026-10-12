@@ -1,6 +1,7 @@
 import '@fontsource-variable/inter';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
+import '@/lib/installPrompt';
 
 import App from '@/App';
 import './index.css';

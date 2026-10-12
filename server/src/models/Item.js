@@ -38,6 +38,7 @@ const itemSchema = new mongoose.Schema(
     status: { type: String, enum: ITEM_STATUSES, default: ITEM_STATUS.INBOX },
     scheduledAt: { type: Date, default: null }, // stored in UTC
     notifiedAt: { type: Date, default: null }, // set by the scheduler in Phase 8
+    notifyAttempts: { type: Number, default: 0 },
     completedAt: { type: Date, default: null },
     snoozeCount: { type: Number, default: 0 },
   },
@@ -64,6 +65,7 @@ itemSchema.set('toJSON', {
     delete ret.id;
     delete ret.normalizedUrl; // internal only
     return ret;
+    delete ret.notifyAttempts;
   },
 });
 

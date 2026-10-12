@@ -11,6 +11,7 @@ import PublicRoute from './PublicRoute';
 import AddItemPage from '@/pages/AddItemPage';
 import LibraryPage from '@/pages/LibraryPage';
 import InsightsPage from '@/pages/InsightsPage';
+import SettingsPage from '@/pages/SettingsPage';
 
 export const router = createBrowserRouter([
   {
@@ -36,6 +37,7 @@ export const router = createBrowserRouter([
           { path: '/', element: <HomePage /> },
           { path: '/library', element: <LibraryPage /> },
           { path: '/insights', element: <InsightsPage /> },
+          { path: '/settings', element: <SettingsPage /> },
           { path: '/add', element: <AddItemPage /> },
         ],
       },

@@ -16,7 +16,10 @@ export const authApi = {
     return data.data.user;
   },
 
-  async logout(refreshToken) {
-    await http.post('/auth/logout', { refreshToken });
+    async logout(refreshToken, pushEndpoint) {
+    await http.post('/auth/logout', {
+      refreshToken,
+      ...(pushEndpoint && { pushEndpoint }),
+    });
   },
 };

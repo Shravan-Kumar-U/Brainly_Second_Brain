@@ -1,6 +1,7 @@
 import { User } from '../models/User.js';
 import { ApiError } from '../utils/ApiError.js';
 import * as tokenService from './token.service.js';
+import * as pushService from './push.service.js';
 
 export const register = async ({ name, email, password, timezone }, meta) => {
   const existing = await User.findOne({ email });
@@ -35,6 +36,11 @@ export const refresh = async (refreshToken, meta) => {
   return { user, tokens };
 };
 
-export const logout = async (refreshToken) => {
-  await tokenService.revokeRefreshToken(refreshToken);
+export const logout = async (refreshToken, pushEndpoint) => {
+  const userId = await tokenService.revokeRefreshToken(refreshToken);
+
+  // The refresh token proves who is logging out, so this needs no extra auth
+  if (userId && pushEndpoint) {
+    await pushService.removeSubscription(userId, pushEndpoint);
+  }
 };

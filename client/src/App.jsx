@@ -6,6 +6,7 @@ import { ThemeProvider } from '@/context/ThemeProvider';
 import { ToastProvider } from '@/context/ToastProvider';
 import { queryClient } from '@/lib/queryClient';
 import { router } from '@/routes/router';
+import { PwaUpdatePrompt } from '@/components/pwa/PwaUpdatePrompt';
 
 export default function App() {
   return (
@@ -14,6 +15,7 @@ export default function App() {
         <ToastProvider>
           <AuthProvider>
             <RouterProvider router={router} />
+             <PwaUpdatePrompt />
           </AuthProvider>
         </ToastProvider>
       </QueryClientProvider>
