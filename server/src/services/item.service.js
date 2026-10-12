@@ -5,6 +5,7 @@ import { detectPlatform, normalizeUrl } from '../utils/url.util.js';
 import { isUnsafeUrlError } from '../utils/ssrf.util.js';
 import { enrichInBackground, enrichItem } from './itemEnrichment.service.js';
 import { fetchMetadata } from './metadata/index.js';
+import * as collectionService from './collection.service.js';
 
 const MINUTE_MS = 60 * 1000;
 
@@ -18,6 +19,7 @@ const findOwned = async (userId, id) => {
 };
 
 export const createItem = async (userId, data) => {
+   if (data.collection) await collectionService.assertOwned(userId, data.collection);
   const normalizedUrl = normalizeUrl(data.url);
 
   const duplicate = await Item.findOne({
@@ -42,6 +44,7 @@ export const createItem = async (userId, data) => {
     title: data.title,
     notes: data.notes,
     tags: data.tags,
+    collection: data.collection ?? null,
     durationMinutes: data.durationMinutes,
     scheduledAt: data.scheduledAt ?? null,
     status: data.scheduledAt ? ITEM_STATUS.SCHEDULED : ITEM_STATUS.INBOX,
@@ -54,7 +57,7 @@ export const createItem = async (userId, data) => {
 };
 
 export const listItems = async (userId, query) => {
-  const { status, platform, contentType, tag, q, from, to, maxDuration, sort, page, limit } = query;
+  const { status, platform, contentType, tag, q, from, to, maxDuration, collection, sort, page, limit } = query;
 
   const filter = { user: userId };
 
@@ -67,6 +70,7 @@ export const listItems = async (userId, query) => {
   if (platform) filter.platform = platform;
   if (contentType) filter.contentType = contentType;
   if (tag) filter.tags = tag;
+  if (collection) filter.collection = collection;
   if (maxDuration) filter.durationMinutes = { $lte: maxDuration }; // "I have 15 minutes" mode
   if (from || to) {
     filter.scheduledAt = { ...(from && { $gte: from }), ...(to && { $lte: to }) };
@@ -102,6 +106,11 @@ export const getItem = (userId, id) => findOwned(userId, id);
 export const updateItem = async (userId, id, changes) => {
   const item = await findOwned(userId, id);
   const { scheduledAt, ...fields } = changes;
+
+  if (collection !== undefined) {
+    if (collection) await collectionService.assertOwned(userId, collection);
+    item.collection = collection; // null removes it from its collection
+  }
 
   Object.assign(item, fields);
 
@@ -199,4 +208,53 @@ export const previewLink = async (url) => {
     }
     throw error;
   }
+};
+
+
+const HOUR_MS = 3_600_000;
+const DAY_MS = 24 * HOUR_MS;
+
+const rankItem = (item, minutes, now) => {
+  const due = item.scheduledAt ? item.scheduledAt.getTime() : null;
+  let score;
+  let reason;
+
+  if (item.status === ITEM_STATUS.SCHEDULED && due !== null && due <= now) {
+    score = 100 + Math.min(50, (now - due) / HOUR_MS); // the longer overdue, the higher
+    reason = 'overdue';
+  } else if (item.status === ITEM_STATUS.SCHEDULED && due !== null && due - now <= DAY_MS) {
+    score = 60;
+    reason = 'due-soon';
+  } else if (item.status === ITEM_STATUS.INBOX) {
+    score = 30 + Math.min(20, (now - item.createdAt.getTime()) / DAY_MS); // oldest waits longest
+    reason = 'waiting';
+  } else {
+    score = 10; // scheduled for later: you already chose another time
+    reason = 'fits';
+  }
+
+  if (minutes) {
+    if (item.durationMinutes) score += 10 * (item.durationMinutes / minutes); // use more of your window
+    else score -= 15; // unknown length is a gamble
+  }
+  if (item.needsReview) score -= 20; // snoozed 3+ times: probably not urgent
+
+  return { score, reason };
+};
+
+export const pickItem = async (userId, { minutes, exclude = [] }) => {
+  const filter = { user: userId, status: { $in: [ITEM_STATUS.INBOX, ITEM_STATUS.SCHEDULED] } };
+  if (exclude.length > 0) filter._id = { $nin: exclude };
+  // A null length also matches items with no length stored
+  if (minutes) filter.$or = [{ durationMinutes: { $lte: minutes } }, { durationMinutes: null }];
+
+  const candidates = await Item.find(filter).sort({ createdAt: 1 }).limit(200);
+  if (candidates.length === 0) return null;
+
+  const now = Date.now();
+  const best = candidates
+    .map((item) => ({ item, ...rankItem(item, minutes, now) }))
+    .sort((a, b) => b.score - a.score)[0];
+
+  return { item: best.item, reason: best.reason };
 };

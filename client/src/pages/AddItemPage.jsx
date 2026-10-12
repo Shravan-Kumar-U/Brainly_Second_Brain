@@ -17,6 +17,8 @@ import { useCreateItem, useLinkPreview, useTags } from '@/hooks/useItems';
 import { useToast } from '@/hooks/useToast';
 import { formatDuration, formatRelative, formatWhen, isPastDate } from '@/lib/time';
 import { extractUrl, isHttpUrl, normalizeInputUrl } from '@/lib/url';
+import { Select } from '@/components/ui/Select';
+import { useCollections } from '@/hooks/useCollections';
 
 const DURATION_CHOICES = [null, 5, 10, 15, 30, 60];
 
@@ -43,6 +45,8 @@ export default function AddItemPage() {
   const [duration, setDuration] = useState(null);
   const [tags, setTags] = useState([]);
   const [notes, setNotes] = useState('');
+  const [collection, setCollection] = useState(() => searchParams.get('collection') ?? '');
+  const collections = useCollections();
 
   const url = normalizeInputUrl(rawUrl);
   const valid = isHttpUrl(url);
@@ -82,6 +86,7 @@ export default function AddItemPage() {
         ...(tags.length > 0 && { tags }),
         ...(notes.trim() && { notes: notes.trim() }),
         ...(duration && { durationMinutes: duration }),
+        ...(collection && { collection }),
       },
       { onSuccess: () => navigate('/') }
     );
@@ -154,6 +159,19 @@ export default function AddItemPage() {
               ))}
             </div>
           </Section>
+
+          {collections.data?.length > 0 && (
+            <Section title="Collection" hint="Group links you want to keep together, or share later.">
+              <Select label="Collection" value={collection} onChange={(event) => setCollection(event.target.value)}>
+                <option value="">None</option>
+                {collections.data.map((entry) => (
+                  <option key={entry._id} value={entry._id}>
+                    {entry.name}
+                  </option>
+                ))}
+              </Select>
+            </Section>
+          )}
 
           <Section title="Tags and notes" hint="Future you will thank present you for a line of context.">
             <div className="space-y-4">

@@ -41,3 +41,12 @@ export const actionLimiter = rateLimit({
   legacyHeaders: false,
   message: { success: false, message: 'Too many requests. Please slow down.' },
 });
+
+// Public endpoint (no login), limited per IP address
+export const sharedLimiter = rateLimit({
+  windowMs: 10 * 60 * 1000,
+  limit: 120,
+  standardHeaders: 'draft-7',
+  legacyHeaders: false,
+  message: { success: false, message: 'Too many requests. Please slow down.' },
+});

@@ -18,10 +18,8 @@ const Tab = ({ to, label, icon: Icon, end }) => (
 );
 
 export function BottomNav() {
-  const left = NAV_ITEMS.slice(0, 2);
-  const right = NAV_ITEMS.slice(2);
-  // Keeps the "+" centered while the right side has fewer tabs (Phase 9 adds one)
-  const spacers = Math.max(0, left.length - right.length);
+  const tabs = NAV_ITEMS.filter((item) => item.mobile !== false);
+  const middle = Math.ceil(tabs.length / 2);
 
   return (
     <nav
@@ -29,7 +27,7 @@ export function BottomNav() {
       className="fixed inset-x-0 bottom-0 z-40 border-t bg-surface/90 pb-[env(safe-area-inset-bottom)] backdrop-blur-lg lg:hidden"
     >
       <div className="mx-auto flex h-16 max-w-md items-center">
-        {left.map(Tab)}
+        {tabs.slice(0, middle).map(Tab)}
 
         <NavLink
           to="/add"
@@ -39,10 +37,7 @@ export function BottomNav() {
           <Plus className="size-7" aria-hidden />
         </NavLink>
 
-        {right.map(Tab)}
-        {Array.from({ length: spacers }, (_, index) => (
-          <span key={index} className="flex-1" aria-hidden />
-        ))}
+        {tabs.slice(middle).map(Tab)}
       </div>
     </nav>
   );

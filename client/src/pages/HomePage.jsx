@@ -13,6 +13,7 @@ import { useItemList } from '@/hooks/useItems';
 import { FIT_OPTIONS } from '@/lib/time';
 import { InstallBanner } from '@/components/pwa/InstallBanner';
 import { ReminderPrompt } from '@/components/pwa/ReminderPrompt';
+import { PickCard } from '@/components/items/PickCard';
 
 // Defined outside the component so the query keys stay identical between renders
 const UP_NEXT = { status: 'scheduled', sort: 'scheduledAt', limit: 6 };
@@ -124,6 +125,7 @@ export default function HomePage() {
           <TimeFit />
         </div>
       </div>
+      <PickCard />
 
       <Section title="Up next" total={upNext.data?.meta.total} to="/library?status=scheduled">
         <ItemGrid

@@ -3,6 +3,8 @@ import { CONTENT_TYPES, ITEM_STATUSES, PLATFORMS } from '../constants/item.const
 
 const GRACE_MS = 60 * 1000; // tolerate a minute of clock/network lag
 
+const objectId = z.string().regex(/^[a-f\d]{24}$/i, 'Invalid id');
+
 const httpUrl = z
   .string()
   .trim()
@@ -42,6 +44,7 @@ export const createItemSchema = z.object({
   contentType: contentType.optional(),
   durationMinutes: z.number().int().min(1).max(600).optional(),
   scheduledAt: futureDate.optional(),
+  collection: objectId.optional(),
 });
 
 export const updateItemSchema = z
@@ -52,6 +55,7 @@ export const updateItemSchema = z
     contentType: contentType.optional(),
     durationMinutes: z.number().int().min(1).max(600).nullable().optional(),
     scheduledAt: futureDate.nullable().optional(), // null = remove the reminder
+    collection: objectId.nullable().optional(),
   })
   .refine((data) => Object.keys(data).length > 0, 'Provide at least one field to update');
 
@@ -71,6 +75,23 @@ export const listItemsQuerySchema = z.object({
   sort: z.enum(['scheduledAt', '-scheduledAt', 'createdAt', '-createdAt']).default('scheduledAt'),
   page: z.coerce.number().int().min(1).default(1),
   limit: z.coerce.number().int().min(1).max(50).default(20),
+  collection: objectId.optional(),
 });
 
+
 export const previewSchema = z.object({ url: httpUrl });
+
+const idList = z
+  .string()
+  .max(600)
+  .optional()
+  .transform((value) => (value ? value.split(',').filter(Boolean) : []))
+  .refine(
+    (ids) => ids.length <= 20 && ids.every((id) => /^[a-f\d]{24}$/i.test(id)),
+    'Invalid exclude list'
+  );
+
+export const pickQuerySchema = z.object({
+  minutes: z.coerce.number().int().min(1).max(600).optional(),
+  exclude: idList,
+});

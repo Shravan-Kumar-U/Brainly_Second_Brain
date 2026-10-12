@@ -60,3 +60,8 @@ export const refreshMetadata = asyncHandler(async (req, res) => {
   const item = await itemService.refreshMetadata(req.user._id, req.params.id);
   res.json({ success: true, data: { item } });
 });
+
+export const pickItem = asyncHandler(async (req, res) => {
+  const pick = await itemService.pickItem(req.user._id, req.validated.query);
+  res.json({ success: true, data: { pick } });
+});

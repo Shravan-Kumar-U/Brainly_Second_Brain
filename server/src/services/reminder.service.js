@@ -50,7 +50,7 @@ export const buildReminderPayload = (item) => {
       .filter(Boolean)
       .join('\n'),
     tag: `item-${item._id}`,
-    url: '/',
+    url: `/focus/${item._id}`,
     itemId: String(item._id),
     actionToken: tokenService.signActionToken({ userId: item.user, itemId: item._id }),
     actions: [

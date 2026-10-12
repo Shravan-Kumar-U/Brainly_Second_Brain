@@ -1,6 +1,22 @@
 import { http } from './client';
 
 export const itemsApi = {
+
+    async get(id) {
+    const { data } = await http.get(`/items/${id}`);
+    return data.data.item;
+  },
+
+  async pick({ minutes, exclude = [] }) {
+    const { data } = await http.get('/items/pick', {
+      params: {
+        ...(minutes && { minutes }),
+        ...(exclude.length > 0 && { exclude: exclude.join(',') }),
+      },
+    });
+    return data.data.pick ?? null; // { item, reason } or null
+  },
+
   async list(params) {
     const { data } = await http.get('/items', { params });
     return { items: data.data.items, meta: data.meta };

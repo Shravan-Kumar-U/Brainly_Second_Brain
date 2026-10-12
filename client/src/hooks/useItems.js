@@ -102,3 +102,27 @@ export function useItemActions() {
     refresh: useItemMutation((id) => itemsApi.refreshMetadata(id), 'Details refreshed'),
   };
 }
+
+export function useItem(id) {
+  return useQuery({
+    queryKey: ['items', 'detail', id],
+    queryFn: () => itemsApi.get(id),
+  });
+}
+
+// The pick is recomputed on demand, never cached, so it always reflects your current list
+export function useItemPick({ minutes, exclude }) {
+  return useQuery({
+    queryKey: ['items', 'pick', minutes ?? 'any', exclude.join(',')],
+    queryFn: () => itemsApi.pick({ minutes, exclude }),
+    placeholderData: keepPreviousData,
+    staleTime: 0,
+    gcTime: 0,
+    retry: false,
+    refetchOnWindowFocus: false,
+  });
+}
+
+export function useUpdateItem(successMessage) {
+  return useItemMutation(({ id, data }) => itemsApi.update(id, data), successMessage);
+}

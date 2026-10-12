@@ -1,5 +1,5 @@
-import { LogOut } from 'lucide-react';
-import { Outlet, useLocation } from 'react-router';
+import { LogOut, Settings } from 'lucide-react';
+import { Link, Outlet, useLocation } from 'react-router';
 
 import { BackButton } from '@/components/ui/BackButton';
 import { Logo } from '@/components/ui/Logo';
@@ -10,6 +10,7 @@ import { BottomNav } from './BottomNav';
 import { Sidebar } from './Sidebar';
 import { useEffect } from 'react';
 import { pushClient } from '@/lib/pushClient';
+
 
 export default function AppShell() {
    useEffect(() => {
@@ -33,6 +34,13 @@ export default function AppShell() {
               <Logo />
             </div>
             <div className="flex items-center gap-1">
+              <Link
+                to="/settings"
+                aria-label="Settings"
+                className="grid size-10 place-items-center rounded-xl text-fg-muted transition hover:bg-surface-2 hover:text-fg"
+              >
+                <Settings className="size-5" aria-hidden />
+              </Link>
               <ThemeToggle />
               <button
                 type="button"

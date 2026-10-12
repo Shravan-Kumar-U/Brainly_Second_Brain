@@ -10,6 +10,7 @@ import {
   RotateCcw,
   Timer,
   Trash2,
+  FolderOpen
 } from 'lucide-react';
 import { useState } from 'react';
 
@@ -32,6 +33,7 @@ import {
 import { hostnameOf } from '@/lib/url';
 import { PlatformBadge } from './PlatformBadge';
 import { SchedulePicker } from './SchedulePicker';
+import { CollectionPicker } from '@/components/collections/CollectionPicker';
 
 function IconButton({ label, className, children, ...props }) {
   return (
@@ -259,6 +261,8 @@ export function ItemCard({ item }) {
         </div>
       </div>
 
+      <SheetAction icon={FolderOpen} label="Collection" onClick={() => setSheet('collection')} />
+
       <Modal open={sheet === 'actions'} onClose={close} title="Manage">
         <p className="mb-3 line-clamp-2 text-sm text-fg-muted">{title}</p>
         <ul className="space-y-1">
@@ -339,6 +343,9 @@ export function ItemCard({ item }) {
             Delete
           </Button>
         </div>
+      </Modal>
+      <Modal open={sheet === 'collection'} onClose={close} title="Move to collection">
+        <CollectionPicker item={item} onDone={close} />
       </Modal>
     </Card>
   );

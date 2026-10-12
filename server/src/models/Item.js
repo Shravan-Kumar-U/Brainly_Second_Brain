@@ -34,6 +34,7 @@ const itemSchema = new mongoose.Schema(
 
     notes: { type: String, trim: true, maxlength: 2000, default: '' },
     tags: { type: [String], default: [] },
+    collection: { type: mongoose.Schema.Types.ObjectId, ref: 'Collection', default: null },
 
     status: { type: String, enum: ITEM_STATUSES, default: ITEM_STATUS.INBOX },
     scheduledAt: { type: Date, default: null }, // stored in UTC
@@ -53,6 +54,9 @@ itemSchema.index({ user: 1, normalizedUrl: 1 });
 itemSchema.index({ user: 1, tags: 1 });
 // "Which reminders are due right now?" (the Phase 8 scheduler)
 itemSchema.index({ status: 1, scheduledAt: 1 });
+
+// Collection pages
+itemSchema.index({ user: 1, collection: 1, status: 1 });
 
 itemSchema.virtual('needsReview').get(function () {
   return this.snoozeCount >= SNOOZE_REVIEW_THRESHOLD;

@@ -11,6 +11,7 @@ import {
   previewSchema,
   snoozeSchema,
   updateItemSchema,
+  pickQuerySchema
 } from '../validators/item.validator.js';
 
 const router = Router();
@@ -32,6 +33,7 @@ router
 // Fixed paths must be declared BEFORE '/:id'
 router.get('/tags', itemController.listTags);
 router.post('/preview', metadataLimiter, validate(previewSchema), itemController.previewLink);
+router.get('/pick', validate(pickQuerySchema, 'query'), itemController.pickItem);
 
 router
   .route('/:id')
