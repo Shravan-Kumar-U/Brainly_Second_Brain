@@ -75,7 +75,7 @@ const claimNextDue = () => {
       notifyAttempts: { $not: { $gte: MAX_ATTEMPTS } },
     },
     { $set: { notifiedAt: now }, $inc: { notifyAttempts: 1 } },
-    { sort: { scheduledAt: 1 }, new: true }
+    { sort: { scheduledAt: 1 }, returnDocument: 'after' }
   );
 };
 

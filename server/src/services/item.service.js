@@ -105,7 +105,7 @@ export const getItem = (userId, id) => findOwned(userId, id);
 
 export const updateItem = async (userId, id, changes) => {
   const item = await findOwned(userId, id);
-  const { scheduledAt, ...fields } = changes;
+  const { scheduledAt, collection, ...fields } = changes;
 
   if (collection !== undefined) {
     if (collection) await collectionService.assertOwned(userId, collection);
@@ -114,11 +114,11 @@ export const updateItem = async (userId, id, changes) => {
 
   Object.assign(item, fields);
 
-    if (scheduledAt !== undefined) {
+  if (scheduledAt !== undefined) {
     item.scheduledAt = scheduledAt;
     item.snoozeCount = 0; // a deliberate new time means "yes, I still want this"
-    item.notifiedAt = null;
     item.notifyAttempts = 0;
+    item.notifiedAt = null;
     item.completedAt = null;
     item.status = scheduledAt ? ITEM_STATUS.SCHEDULED : ITEM_STATUS.INBOX;
   }
