@@ -50,3 +50,22 @@ export const sharedLimiter = rateLimit({
   legacyHeaders: false,
   message: { success: false, message: 'Too many requests. Please slow down.' },
 });
+
+// Both run after `protect`, so there is always a user to count against
+export const bulkLimiter = rateLimit({
+  windowMs: 10 * 60 * 1000,
+  limit: 60,
+  keyGenerator: (req) => String(req.user._id),
+  standardHeaders: 'draft-7',
+  legacyHeaders: false,
+  message: { success: false, message: 'Too many bulk changes. Please slow down.' },
+});
+
+export const exportLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  limit: 10,
+  keyGenerator: (req) => String(req.user._id),
+  standardHeaders: 'draft-7',
+  legacyHeaders: false,
+  message: { success: false, message: 'Too many exports. Try again in a while.' },
+});

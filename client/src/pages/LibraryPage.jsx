@@ -1,7 +1,8 @@
-import { Plus, Search, SearchX } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { CheckSquare, Plus, Search, SearchX } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router';
 
+import { BulkActionBar } from '@/components/items/BulkActionBar';
 import { ItemGrid } from '@/components/items/ItemGrid';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { Button } from '@/components/ui/Button';
@@ -11,6 +12,7 @@ import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';
 import { useDebounce } from '@/hooks/useDebounce';
 import { useInfiniteItems, useTags } from '@/hooks/useItems';
+import { useSelection } from '@/hooks/useSelection';
 import { cn } from '@/lib/cn';
 import { PLATFORM_OPTIONS } from '@/lib/platforms';
 import { FIT_OPTIONS } from '@/lib/time';
@@ -26,6 +28,7 @@ const STATUS_TABS = [
 const STATUS_IDS = STATUS_TABS.map((tab) => tab.id);
 const PLATFORM_IDS = PLATFORM_OPTIONS.map((option) => option.value);
 const FIT_VALUES = FIT_OPTIONS.map(String);
+const CLOSED_STATUSES = ['completed', 'archived'];
 
 // Reads the starting filters from the URL once (Home's "15 min" chips link here)
 const readInitialFilters = (params) => {
@@ -47,6 +50,9 @@ export default function LibraryPage() {
   const [search, setSearch] = useState(() => searchParams.get('q') ?? '');
   const q = useDebounce(search, 350).trim();
 
+  const [selecting, setSelecting] = useState(false);
+  const { selected, toggle, selectMany, clear } = useSelection();
+
   const setFilter = (key, value) => setFilters((previous) => ({ ...previous, [key]: value }));
   const toggleFilter = (key, value) =>
     setFilters((previous) => ({ ...previous, [key]: previous[key] === value ? '' : value }));
@@ -64,12 +70,24 @@ export default function LibraryPage() {
     [filters, q]
   );
 
+  // A different list means the old selection no longer makes sense
+  useEffect(() => {
+    clear();
+  }, [params, clear]);
+
   const query = useInfiniteItems(params);
   const tags = useTags();
 
   const items = query.data?.pages.flatMap((page) => page.items) ?? [];
   const total = query.data?.pages[0]?.meta.total;
   const hasFilters = Boolean(filters.platform || filters.tag || filters.fit || q);
+  const mode = CLOSED_STATUSES.includes(filters.status) ? 'closed' : 'active';
+  const allSelected = items.length > 0 && items.every((item) => selected.has(item._id));
+
+  const exitSelect = () => {
+    setSelecting(false);
+    clear();
+  };
 
   const clearFilters = () => {
     setSearch('');
@@ -97,11 +115,21 @@ export default function LibraryPage() {
   );
 
   return (
-    <div>
+    <div className={cn(selecting && 'pb-24')}>
       <PageHeader
         title="Library"
         subtitle={total !== undefined ? `${total} ${total === 1 ? 'item' : 'items'}` : ' '}
-        action={<Button onClick={() => navigate('/add')}>Save a link</Button>}
+        action={
+          <div className="flex gap-2">
+            {items.length > 0 && (
+              <Button variant="secondary" onClick={() => (selecting ? exitSelect() : setSelecting(true))}>
+                <CheckSquare className="size-4" aria-hidden />
+                {selecting ? 'Cancel' : 'Select'}
+              </Button>
+            )}
+            <Button onClick={() => navigate('/add')}>Save a link</Button>
+          </div>
+        }
       />
 
       <div className="space-y-3">
@@ -176,6 +204,7 @@ export default function LibraryPage() {
           error={query.isError ? query.error : null}
           onRetry={query.refetch}
           empty={empty}
+          selection={selecting ? { selected, onToggle: toggle } : undefined}
         />
       </div>
 
@@ -185,6 +214,16 @@ export default function LibraryPage() {
             Load more
           </Button>
         </div>
+      )}
+
+      {selecting && (
+        <BulkActionBar
+          ids={[...selected]}
+          mode={mode}
+          allSelected={allSelected}
+          onToggleAll={() => (allSelected ? clear() : selectMany(items.map((item) => item._id)))}
+          onExit={exitSelect}
+        />
       )}
     </div>
   );

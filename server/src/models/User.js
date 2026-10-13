@@ -27,6 +27,12 @@ const userSchema = new mongoose.Schema(
       type: String,
       default: 'Asia/Kolkata',
     },
+    weeklyReview: {
+      // Older users have no value stored, and the code treats "missing" as on
+      enabled: { type: Boolean, default: true },
+      // The local date (YYYY-MM-DD) of the Sunday we last sent a review for
+      lastSentKey: { type: String, default: null },
+    },
   },
   { timestamps: true }
 );
@@ -45,6 +51,7 @@ userSchema.methods.comparePassword = function (candidate) {
 userSchema.set('toJSON', {
   transform: (doc, ret) => {
     delete ret.password;
+    delete ret.weeklyReview; // read and changed through /api/preferences
     delete ret.__v;
     return ret;
   },

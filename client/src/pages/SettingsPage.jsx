@@ -1,40 +1,43 @@
 import { PageHeader } from '@/components/layout/PageHeader';
+import { AccountCard } from '@/components/settings/AccountCard';
+import { ExportCard } from '@/components/settings/ExportCard';
 import { NotificationSettings } from '@/components/settings/NotificationSettings';
-import { Card } from '@/components/ui/Card';
-import { useAuth } from '@/hooks/useAuth';
+import { WeeklyReviewCard } from '@/components/settings/WeeklyReviewCard';
+import { WindowsSettings } from '@/components/windows/WindowsSettings';
 
-function Row({ label, value }) {
+function Section({ title, children }) {
   return (
-    <li className="flex items-center justify-between gap-4 py-3 text-sm">
-      <span className="text-fg-muted">{label}</span>
-      <span className="truncate font-medium">{value}</span>
-    </li>
+    <section>
+      <h2 className="mb-3 text-sm font-semibold text-fg-muted">{title}</h2>
+      <div className="space-y-4">{children}</div>
+    </section>
   );
 }
 
 export default function SettingsPage() {
-  const { user } = useAuth();
-
   return (
     <div>
-      <PageHeader title="Settings" subtitle="Reminders and your account." />
+      <PageHeader title="Settings" subtitle="Reminders, your routine and your data." />
 
-      <div className="grid max-w-5xl gap-6 lg:grid-cols-2">
-        <section>
-          <h2 className="mb-3 text-sm font-semibold text-fg-muted">Notifications</h2>
-          <NotificationSettings />
-        </section>
+      <div className="grid max-w-6xl gap-8 lg:grid-cols-2">
+        <div className="space-y-8">
+          <Section title="Notifications">
+            <NotificationSettings />
+            <WeeklyReviewCard />
+          </Section>
+          <Section title="Your data">
+            <ExportCard />
+          </Section>
+        </div>
 
-        <section>
-          <h2 className="mb-3 text-sm font-semibold text-fg-muted">Account</h2>
-          <Card className="px-5">
-            <ul className="divide-y">
-              <Row label="Name" value={user.name} />
-              <Row label="Email" value={user.email} />
-              <Row label="Timezone" value={user.timezone} />
-            </ul>
-          </Card>
-        </section>
+        <div className="space-y-8">
+          <Section title="Watch windows">
+            <WindowsSettings />
+          </Section>
+          <Section title="Account">
+            <AccountCard />
+          </Section>
+        </div>
       </div>
     </div>
   );

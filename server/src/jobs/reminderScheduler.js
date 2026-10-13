@@ -1,15 +1,26 @@
 import { processDueReminders } from '../services/reminder.service.js';
+import { processWeeklyReviews } from '../services/weeklyReview.service.js';
 
-// A reminder fires at most this long after its time, plus the push service's own delivery time
-const INTERVAL_MS = 15_000;
+const INTERVAL_MS = 15_000; // reminders are checked this often
+const REVIEW_CHECK_MS = 10 * 60 * 1000; // weekly reviews only need a check every 10 minutes
 
 let timer = null;
 let current = null; // the run in progress, so shutdown can wait for it
+let lastReviewCheck = 0;
+
+const run = async () => {
+  await processDueReminders();
+
+  if (Date.now() - lastReviewCheck >= REVIEW_CHECK_MS) {
+    lastReviewCheck = Date.now();
+    await processWeeklyReviews();
+  }
+};
 
 const tick = () => {
   if (current) return current; // never let two runs overlap
 
-  current = processDueReminders()
+  current = run()
     .catch((error) => console.error('[scheduler] run failed:', error))
     .finally(() => {
       current = null;

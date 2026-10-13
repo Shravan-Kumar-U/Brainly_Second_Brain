@@ -85,7 +85,7 @@ function ScheduleSheetBody({ item, onDone, update }) {
 
   return (
     <>
-      <SchedulePicker value={draft} onChange={setDraft} />
+      <SchedulePicker value={draft} onChange={setDraft} minutes={item.durationMinutes ?? undefined} />
       <Button className="mt-5" fullWidth loading={update.isPending} disabled={invalid} onClick={save}>
         {draft ? 'Save reminder' : 'Move to inbox'}
       </Button>

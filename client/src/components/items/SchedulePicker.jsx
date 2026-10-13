@@ -9,8 +9,9 @@ import {
   parseLocalInput,
   toLocalInputValue,
 } from '@/lib/time';
+import { WindowSuggestions } from './WindowSuggestions';
 
-export function SchedulePicker({ value, onChange }) {
+export function SchedulePicker({ value, onChange, minutes }) {
   const inputId = useId();
   const [activeId, setActiveId] = useState(null);
 
@@ -20,6 +21,11 @@ export function SchedulePicker({ value, onChange }) {
   const choosePreset = (preset) => {
     setActiveId(preset.id);
     onChange(preset.resolve()); // resolved at click time, so "In 1 hour" is always accurate
+  };
+
+  const chooseSuggestion = (date) => {
+    setActiveId(null);
+    onChange(date);
   };
 
   const handleCustom = (event) => {
@@ -35,6 +41,8 @@ export function SchedulePicker({ value, onChange }) {
 
   return (
     <div>
+      <WindowSuggestions minutes={minutes} value={value} onPick={chooseSuggestion} />
+
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
         {presets.map((preset) => {
           const active = activeId === preset.id;
@@ -46,9 +54,7 @@ export function SchedulePicker({ value, onChange }) {
               onClick={() => choosePreset(preset)}
               className={cn(
                 'rounded-xl border px-3 py-2.5 text-left transition',
-                active
-                  ? 'border-brand-500 bg-brand-500/10'
-                  : 'bg-surface hover:bg-surface-2'
+                active ? 'border-brand-500 bg-brand-500/10' : 'bg-surface hover:bg-surface-2'
               )}
             >
               <span className="block text-sm font-semibold">{preset.label}</span>

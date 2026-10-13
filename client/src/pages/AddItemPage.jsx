@@ -134,7 +134,11 @@ export default function AddItemPage() {
             title="When will you watch it?"
             hint="No time yet? Skip this and it goes to your Inbox."
           >
-            <SchedulePicker value={scheduledAt} onChange={setScheduledAt} />
+            <SchedulePicker
+              value={scheduledAt}
+              onChange={setScheduledAt}
+              minutes={duration ?? detectedDuration ?? undefined}
+            />
             {scheduledAt && !pastTime && (
               <p className="mt-3 text-sm font-medium text-brand-700 dark:text-brand-300">
                 Scheduled for {formatWhen(scheduledAt)}{' '}
